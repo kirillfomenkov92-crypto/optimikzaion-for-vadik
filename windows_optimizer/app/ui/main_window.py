@@ -17,6 +17,9 @@ from app.modules.startup import StartupModule
 from app.modules.services import ServicesModule
 from app.modules.disk import DiskModule
 from app.modules.privacy import PrivacyModule
+from app.modules.network import NetworkModule
+from app.modules.power import PowerModule
+from app.modules.memory import MemoryModule
 
 _STYLE = Path(__file__).resolve().parent / "styles" / "dark_theme.qss"
 _ICON = Path(__file__).resolve().parents[2] / "resources" / "icons" / "app.ico"
@@ -96,6 +99,9 @@ class MainWindow(QMainWindow):
         services = ServicesModule()
         disk = DiskModule()
         privacy = PrivacyModule()
+        network = NetworkModule()
+        power = PowerModule()
+        memory = MemoryModule()
 
         reg_rows = [f"[{r['status']}] {r['name']} ({r['risk']})" for r in reg.scan()]
         startup_rows = [f"{r['name']} — {r.get('source','')}" for r in startup.scan()]
@@ -106,11 +112,18 @@ class MainWindow(QMainWindow):
              else f"приложение: {r['name']}{'' if r.get('safe') else '  ⚠ осторожно'}")
             for r in privacy.scan()
         ]
+        net_rows = [f"[{r['status']}] {r['name']} — {r['description']}" for r in network.scan()]
+        power_rows = [f"{'● ' if r['active'] else '○ '}{r['name']}" for r in power.scan()]
+        memory_rows = [f"{r['item']}: {r['value']}" for r in memory.scan()]
+
         return [
             ("🏠 Дашборд", Dashboard()),
             ("🚀 Автозагрузка", _ModulePlaceholder("Автозагрузка", startup_rows)),
             ("⚙️ Службы", _ModulePlaceholder("Службы", services_rows)),
             ("💾 Очистка диска", _ModulePlaceholder("Очистка диска", disk_rows)),
+            ("🌐 Сеть", _ModulePlaceholder("Сеть (TCP/IP)", net_rows)),
+            ("⚡ Питание", _ModulePlaceholder("Питание", power_rows)),
+            ("🧠 Память", _ModulePlaceholder("Память", memory_rows)),
             ("🕵️ Приватность", _ModulePlaceholder("Приватность и bloatware", privacy_rows)),
             ("📝 Реестр", _ModulePlaceholder("Реестр", reg_rows)),
         ]
