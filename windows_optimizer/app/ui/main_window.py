@@ -14,9 +14,12 @@ from PyQt6.QtWidgets import (
 from app.ui.dashboard import Dashboard
 from app.ui.scan_page import ScanPage
 from app.ui.backups_page import BackupsPage
+from app.ui.about_page import AboutPage
+from app.ui.settings_page import SettingsPage
 from app.ui.widgets.tweak_panel import TweakPanel
 from app.ui.widgets.disk_panel import DiskPanel
 from app.ui.widgets.services_panel import ServicesPanel
+from app.ui.widgets.action_panel import ActionPanel
 from app.modules.registry import RegistryModule
 from app.modules.startup import StartupModule
 from app.modules.services import ServicesModule
@@ -30,7 +33,8 @@ from app.modules.gpu import GpuModule
 from app.modules.cpu import CpuModule
 from app.modules.security import SecurityModule
 
-_STYLE = Path(__file__).resolve().parent / "styles" / "dark_theme.qss"
+_STYLES_DIR = Path(__file__).resolve().parent / "styles"
+_STYLE = _STYLES_DIR / "dark_theme.qss"
 _ICON = Path(__file__).resolve().parents[2] / "resources" / "icons" / "app.ico"
 
 
@@ -111,23 +115,17 @@ class MainWindow(QMainWindow):
         memory = MemoryModule()
 
         startup_rows = [f"{r['name']} — {r.get('source','')}" for r in startup.scan()]
-        privacy_rows = [
-            (f"твик: {r['name']} [{r.get('status','')}]" if r["kind"] == "tweak"
-             else f"приложение: {r['name']}{'' if r.get('safe') else '  ⚠ осторожно'}")
-            for r in privacy.scan()
-        ]
-        net_rows = [f"[{r['status']}] {r['name']} — {r['description']}" for r in network.scan()]
-        power_rows = [f"{'● ' if r['active'] else '○ '}{r['name']}" for r in power.scan()]
-        memory_rows = [f"{r['item']}: {r['value']}" for r in memory.scan()]
-
         gaming = GamingModule()
         gpu = GpuModule()
         cpu = CpuModule()
         security = SecurityModule()
-        gaming_rows = [f"[{r['status']}] {r['name']} — {r['description']}" for r in gaming.scan()]
         gpu_rows = [f"{r['item']}: {r['value']}" for r in gpu.scan()]
-        cpu_rows = [f"{r['item']}: {r['value']}" for r in cpu.scan()]
         security_rows = [f"{r['item']}: {r['value']}" for r in security.scan()]
+
+        # Обёртки «применить рекомендованное» для панелей действий.
+        apply_memory = lambda: {"LargeSystemCache": memory.set_large_system_cache(0)}
+        apply_cpu = lambda: {"Win32PrioritySeparation (передний план)": cpu.set_priority_separation(0x2A)}
+        apply_privacy = lambda: privacy.apply_privacy([t["id"] for t in privacy.privacy_tweaks()])
 
         return [
             ("🏠 Дашборд", Dashboard()),
@@ -135,16 +133,26 @@ class MainWindow(QMainWindow):
             ("🚀 Автозагрузка", _ModulePlaceholder("Автозагрузка", startup_rows)),
             ("⚙️ Службы", ServicesPanel()),
             ("💾 Очистка диска", DiskPanel()),
-            ("🌐 Сеть", _ModulePlaceholder("Сеть (TCP/IP)", net_rows)),
-            ("⚡ Питание", _ModulePlaceholder("Питание", power_rows)),
-            ("🧠 Память", _ModulePlaceholder("Память", memory_rows)),
-            ("🎮 Игры", _ModulePlaceholder("Игровая оптимизация", gaming_rows)),
+            ("🌐 Сеть", ActionPanel("Сеть (TCP/IP)", network.scan, network.apply_tcp_tweaks,
+                                     "Применить TCP-твики",
+                                     hint="DNS-профили и ping доступны в модуле network.")),
+            ("⚡ Питание", ActionPanel("Питание", power.scan, power.enable_high_performance,
+                                       "Включить «Высокая производительность»",
+                                       backup_before=False)),
+            ("🧠 Память", ActionPanel("Память", memory.scan, apply_memory,
+                                       "Применить (LargeSystemCache=приложения)")),
+            ("🎮 Игры", ActionPanel("Игровая оптимизация", gaming.scan, gaming.apply_all,
+                                     "Применить игровые твики")),
             ("🖥️ GPU", _ModulePlaceholder("GPU", gpu_rows)),
-            ("🖧 CPU", _ModulePlaceholder("CPU", cpu_rows)),
+            ("🖧 CPU", ActionPanel("CPU", cpu.scan, apply_cpu,
+                                    "Приоритет переднему плану")),
             ("🔒 Безопасность", _ModulePlaceholder("Безопасность", security_rows)),
-            ("🕵️ Приватность", _ModulePlaceholder("Приватность и bloatware", privacy_rows)),
+            ("🕵️ Приватность", ActionPanel("Приватность", privacy.scan, apply_privacy,
+                                            "Применить твики приватности")),
             ("📝 Реестр", TweakPanel(reg, "Реестр — твики")),
             ("🗄️ Бэкапы", BackupsPage()),
+            ("⚙️ Настройки", SettingsPage(self.set_theme, getattr(self, "_theme", "dark"))),
+            ("❓ О программе", AboutPage()),
         ]
 
     def _add_page(self, side_layout: QVBoxLayout, title: str, widget: QWidget) -> None:
@@ -156,8 +164,14 @@ class MainWindow(QMainWindow):
         side_layout.addWidget(btn)
 
     def _apply_style(self) -> None:
+        self.set_theme(getattr(self, "_theme", "dark"))
+
+    def set_theme(self, name: str) -> None:
+        """Переключить тему ('dark'|'light') без перезапуска."""
+        self._theme = name if name in ("dark", "light") else "dark"
+        qss = _STYLES_DIR / f"{self._theme}_theme.qss"
         try:
-            if _STYLE.exists():
-                self.setStyleSheet(_STYLE.read_text(encoding="utf-8"))
+            if qss.exists():
+                self.setStyleSheet(qss.read_text(encoding="utf-8"))
         except Exception:
             pass
