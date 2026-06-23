@@ -48,6 +48,12 @@ class Tweak:
     risk: Risk = Risk.LOW
     reboot_required: bool = False
     registry_changes: List[RegistryChange] = field(default_factory=list)
+    # UX-поля (человеческий язык, режимы, профили).
+    friendly_name: str = ""
+    user_benefit: str = ""
+    risk_level: str = "safe"
+    simple_mode_visible: bool = True
+    profiles: List[str] = field(default_factory=list)
 
     # --- применение / откат / проверка ---
     def apply(self) -> bool:
@@ -106,8 +112,13 @@ class Tweak:
             description=d.get("description", ""),
             category=d.get("category", "performance"),
             risk=Risk(d.get("risk", "low")),
-            reboot_required=bool(d.get("reboot_required", False)),
+            reboot_required=bool(d.get("reboot_required", d.get("requires_reboot", False))),
             registry_changes=changes,
+            friendly_name=d.get("friendly_name", ""),
+            user_benefit=d.get("user_benefit", ""),
+            risk_level=d.get("risk_level", "safe"),
+            simple_mode_visible=bool(d.get("simple_mode_visible", True)),
+            profiles=list(d.get("profiles", [])),
         )
 
 

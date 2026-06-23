@@ -51,6 +51,11 @@ class RegistryModule(OptimizerModule):
                 "id": t.id, "name": t.name, "category": t.category,
                 "risk": t.risk.value, "status": st.value,
                 "reboot_required": t.reboot_required, "description": t.description,
+                "friendly_name": t.friendly_name or t.name,
+                "user_benefit": t.user_benefit,
+                "risk_level": t.risk_level,
+                "simple_mode_visible": t.simple_mode_visible,
+                "profiles": t.profiles,
             })
         return result
 

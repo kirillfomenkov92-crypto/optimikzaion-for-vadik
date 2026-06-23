@@ -55,3 +55,7 @@ QStatusBar { background-color: #16213e; color: #a8a8b3; }
 QScrollBar:vertical { background: #16213e; width: 10px; margin: 0; }
 QScrollBar::handle:vertical { background: #0f3460; border-radius: 5px; min-height: 24px; }
 QScrollBar::add-line, QScrollBar::sub-line { height: 0; }
+
+#Header { background-color: #16213e; border-bottom: 1px solid #0f3460; }
+#Header QPushButton { padding: 6px 12px; border-radius: 8px; color: #a8a8b3; background: transparent; }
+#Header QPushButton:checked { background-color: #e94560; color: #fff; font-weight: 600; }
