@@ -73,9 +73,17 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         self.setCentralWidget(central)
-        root = QHBoxLayout(central)
+        outer = QVBoxLayout(central)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.setSpacing(0)
+
+        outer.addWidget(self._build_header())
+
+        body = QWidget()
+        root = QHBoxLayout(body)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
+        outer.addWidget(body, 1)
 
         self.sidebar = QWidget()
         self.sidebar.setObjectName("Sidebar")
@@ -98,7 +106,7 @@ class MainWindow(QMainWindow):
         root.addWidget(self.stack, 1)
 
         self.setStatusBar(QStatusBar())
-        self.statusBar().showMessage("Готов")
+        self.statusBar().showMessage("Откройте «Сканирование», чтобы безопасно оценить систему, или зайдите в нужный раздел.")
 
         if self._btn_group.buttons():
             self._btn_group.buttons()[0].setChecked(True)
@@ -175,3 +183,50 @@ class MainWindow(QMainWindow):
                 self.setStyleSheet(qss.read_text(encoding="utf-8"))
         except Exception:
             pass
+
+    def _build_header(self) -> QWidget:
+        from app.ui.modes import AppMode, mode_manager
+
+        bar = QWidget()
+        bar.setObjectName("Header")
+        lay = QHBoxLayout(bar)
+        lay.setContentsMargins(16, 8, 16, 8)
+        title = QLabel("Windows Optimizer Pro")
+        title.setObjectName("Title")
+        lay.addWidget(title)
+        lay.addStretch(1)
+
+        self._btn_simple = QPushButton("Простой режим")
+        self._btn_advanced = QPushButton("Расширенный режим")
+        for b in (self._btn_simple, self._btn_advanced):
+            b.setCheckable(True)
+        grp = QButtonGroup(self)
+        grp.setExclusive(True)
+        grp.addButton(self._btn_simple)
+        grp.addButton(self._btn_advanced)
+        is_simple = mode_manager().is_simple()
+        self._btn_simple.setChecked(is_simple)
+        self._btn_advanced.setChecked(not is_simple)
+        self._btn_simple.clicked.connect(lambda: self._on_mode_change(AppMode.SIMPLE))
+        self._btn_advanced.clicked.connect(lambda: self._on_mode_change(AppMode.ADVANCED))
+        lay.addWidget(self._btn_simple)
+        lay.addWidget(self._btn_advanced)
+        return bar
+
+    def _on_mode_change(self, mode) -> None:
+        from app.ui.modes import mode_manager
+
+        mode_manager().set_mode(mode)
+        # Обновляем панели, умеющие refresh(), чтобы фильтр режима применился сразу.
+        for i in range(self.stack.count()):
+            w = self.stack.widget(i)
+            if hasattr(w, "refresh"):
+                try:
+                    w.refresh()
+                except Exception:
+                    pass
+        simple = mode_manager().is_simple()
+        self.statusBar().showMessage(
+            "Простой режим: показаны только понятные безопасные улучшения."
+            if simple else "Расширенный режим: доступны все параметры и технические детали."
+        )

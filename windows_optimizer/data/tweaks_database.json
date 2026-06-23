@@ -1,148 +1,140 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "tweaks": [
     {
       "id": "disable_telemetry",
       "category": "privacy",
       "name": "Отключить телеметрию Windows (минимальный уровень)",
-      "description": "AllowTelemetry=0. В некоторых редакциях Windows всё равно отправляет базовую диагностику. Влияет на приватность, безопасно.",
+      "friendly_name": "Убрать слежку Microsoft",
+      "user_benefit": "Windows перестанет отправлять данные о ваших действиях в Microsoft.",
+      "description": "Снижает объём данных, отправляемых в Microsoft. В некоторых редакциях Windows минимальная диагностика всё равно остаётся. Риск: минимальный, легко отменить.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": false,
+      "requires_reboot": false,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "work", "media", "general"],
       "registry_changes": [
-        {
-          "hive": "HKLM",
-          "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
-          "name": "AllowTelemetry",
-          "type": "REG_DWORD",
-          "value_optimized": 0,
-          "value_default": 1
-        }
+        {"hive": "HKLM", "path": "SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection", "name": "AllowTelemetry", "type": "REG_DWORD", "value_optimized": 0, "value_default": 1}
       ]
     },
     {
       "id": "disable_advertising_id",
       "category": "privacy",
       "name": "Отключить рекламный идентификатор",
-      "description": "Запрещает приложениям использовать рекламный ID для профилирования.",
+      "friendly_name": "Отключить персональную рекламу",
+      "user_benefit": "Приложения не смогут отслеживать вас для показа рекламы.",
+      "description": "Запрещает приложениям использовать рекламный профиль. Риск: минимальный.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": false,
+      "requires_reboot": false,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "work", "media", "general"],
       "registry_changes": [
-        {
-          "hive": "HKCU",
-          "path": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
-          "name": "Enabled",
-          "type": "REG_DWORD",
-          "value_optimized": 0,
-          "value_default": 1
-        }
+        {"hive": "HKCU", "path": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo", "name": "Enabled", "type": "REG_DWORD", "value_optimized": 0, "value_default": 1}
       ]
     },
     {
       "id": "menu_show_delay",
       "category": "performance",
       "name": "Убрать задержку показа меню",
-      "description": "MenuShowDelay=0 — меню открываются мгновенно. Косметика отзывчивости интерфейса.",
+      "friendly_name": "Ускорить отклик меню",
+      "user_benefit": "Меню будут открываться мгновенно, без задержки.",
+      "description": "Убирает паузу перед открытием меню. Интерфейс ощущается быстрее. Риск: минимальный.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": false,
+      "requires_reboot": false,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "work", "media", "general"],
       "registry_changes": [
-        {
-          "hive": "HKCU",
-          "path": "Control Panel\\Desktop",
-          "name": "MenuShowDelay",
-          "type": "REG_SZ",
-          "value_optimized": "0",
-          "value_default": "400"
-        }
+        {"hive": "HKCU", "path": "Control Panel\\Desktop", "name": "MenuShowDelay", "type": "REG_SZ", "value_optimized": "0", "value_default": "400"}
       ]
     },
     {
       "id": "disable_window_animations",
       "category": "interface",
-      "name": "Отключить анимацию сворачивания окон",
-      "description": "MinAnimate=0 — быстрее на слабом GPU.",
+      "name": "Отключить анимацию окон",
+      "friendly_name": "Отключить анимации (ускорить интерфейс)",
+      "user_benefit": "Окна будут открываться без плавных эффектов — заметно быстрее на слабом ПК.",
+      "description": "Отключает анимацию сворачивания окон. Полезно на слабой видеокарте. Риск: минимальный.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": false,
+      "requires_reboot": false,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "work", "general"],
       "registry_changes": [
-        {
-          "hive": "HKCU",
-          "path": "Control Panel\\Desktop\\WindowMetrics",
-          "name": "MinAnimate",
-          "type": "REG_SZ",
-          "value_optimized": "0",
-          "value_default": "1"
-        }
+        {"hive": "HKCU", "path": "Control Panel\\Desktop\\WindowMetrics", "name": "MinAnimate", "type": "REG_SZ", "value_optimized": "0", "value_default": "1"}
       ]
     },
     {
       "id": "ntfs_disable_last_access",
       "category": "performance",
       "name": "Отключить обновление времени последнего доступа NTFS",
-      "description": "Снижает лишние записи на диск. Безопасно для большинства сценариев.",
+      "friendly_name": "Снизить лишнюю нагрузку на диск",
+      "user_benefit": "Диск будет реже делать ненужные записи — меньше износ, чуть быстрее.",
+      "description": "Windows перестанет помечать время каждого открытия файла. Риск: минимальный. Потребуется перезагрузка.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": true,
+      "requires_reboot": true,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "work", "media", "general"],
       "registry_changes": [
-        {
-          "hive": "HKLM",
-          "path": "SYSTEM\\CurrentControlSet\\Control\\FileSystem",
-          "name": "NtfsDisableLastAccessUpdate",
-          "type": "REG_DWORD",
-          "value_optimized": 1,
-          "value_default": 0
-        }
+        {"hive": "HKLM", "path": "SYSTEM\\CurrentControlSet\\Control\\FileSystem", "name": "NtfsDisableLastAccessUpdate", "type": "REG_DWORD", "value_optimized": 1, "value_default": 0}
       ]
     },
     {
       "id": "system_responsiveness_games",
       "category": "gaming",
-      "name": "Максимум ресурсов переднему плану (SystemResponsiveness=0)",
-      "description": "Уменьшает резерв для фоновых мультимедиа-задач в пользу активного приложения/игры.",
+      "name": "Максимум ресурсов активному приложению",
+      "friendly_name": "Отдать больше ресурсов играм",
+      "user_benefit": "Игры и активные программы получат больше ресурсов системы.",
+      "description": "Уменьшает резерв для фоновых задач в пользу активного окна. Может влиять на воспроизведение мультимедиа в фоне. Потребуется перезагрузка.",
       "risk": "medium",
+      "risk_level": "caution",
       "reboot_required": true,
+      "requires_reboot": true,
+      "simple_mode_visible": true,
+      "profiles": ["gaming"],
       "registry_changes": [
-        {
-          "hive": "HKLM",
-          "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
-          "name": "SystemResponsiveness",
-          "type": "REG_DWORD",
-          "value_optimized": 0,
-          "value_default": 20
-        }
+        {"hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile", "name": "SystemResponsiveness", "type": "REG_DWORD", "value_optimized": 0, "value_default": 20}
       ]
     },
     {
       "id": "disable_gamebar_dvr",
       "category": "gaming",
-      "name": "Отключить Xbox Game DVR (фоновая запись)",
-      "description": "Отключает фоновую запись Game Bar — снижает накладные расходы в играх.",
+      "name": "Отключить фоновую запись Xbox Game DVR",
+      "friendly_name": "Отключить фоновую запись игр",
+      "user_benefit": "Уберёт лишнюю нагрузку в играх от встроенной записи Xbox.",
+      "description": "Отключает фоновую запись Game Bar. Риск: минимальный.",
       "risk": "low",
+      "risk_level": "safe",
       "reboot_required": false,
+      "requires_reboot": false,
+      "simple_mode_visible": true,
+      "profiles": ["gaming"],
       "registry_changes": [
-        {
-          "hive": "HKCU",
-          "path": "System\\GameConfigStore",
-          "name": "GameDVR_Enabled",
-          "type": "REG_DWORD",
-          "value_optimized": 0,
-          "value_default": 1
-        }
+        {"hive": "HKCU", "path": "System\\GameConfigStore", "name": "GameDVR_Enabled", "type": "REG_DWORD", "value_optimized": 0, "value_default": 1}
       ]
     },
     {
       "id": "network_throttling_off",
       "category": "network",
-      "name": "Отключить ограничение сети для мультимедиа",
-      "description": "NetworkThrottlingIndex=0xFFFFFFFF снимает дроссель сетевого трафика.",
+      "name": "Снять ограничение сети для мультимедиа",
+      "friendly_name": "Ускорить интернет-соединение",
+      "user_benefit": "Снизит задержки в онлайн-играх и видеозвонках.",
+      "description": "Убирает ограничение скорости сети, которое Windows резервирует под мультимедиа. Риск: средний, легко отменить. Потребуется перезагрузка.",
       "risk": "medium",
+      "risk_level": "caution",
       "reboot_required": true,
+      "requires_reboot": true,
+      "simple_mode_visible": true,
+      "profiles": ["gaming", "media"],
       "registry_changes": [
-        {
-          "hive": "HKLM",
-          "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
-          "name": "NetworkThrottlingIndex",
-          "type": "REG_DWORD",
-          "value_optimized": 4294967295,
-          "value_default": 10
-        }
+        {"hive": "HKLM", "path": "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile", "name": "NetworkThrottlingIndex", "type": "REG_DWORD", "value_optimized": 4294967295, "value_default": 10}
       ]
     }
   ]
