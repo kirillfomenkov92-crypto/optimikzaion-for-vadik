@@ -14,6 +14,9 @@ from PyQt6.QtWidgets import (
 from app.ui.dashboard import Dashboard
 from app.modules.registry import RegistryModule
 from app.modules.startup import StartupModule
+from app.modules.services import ServicesModule
+from app.modules.disk import DiskModule
+from app.modules.privacy import PrivacyModule
 
 _STYLE = Path(__file__).resolve().parent / "styles" / "dark_theme.qss"
 _ICON = Path(__file__).resolve().parents[2] / "resources" / "icons" / "app.ico"
@@ -90,11 +93,25 @@ class MainWindow(QMainWindow):
     def _pages(self) -> List[Tuple[str, QWidget]]:
         reg = RegistryModule()
         startup = StartupModule()
+        services = ServicesModule()
+        disk = DiskModule()
+        privacy = PrivacyModule()
+
         reg_rows = [f"[{r['status']}] {r['name']} ({r['risk']})" for r in reg.scan()]
         startup_rows = [f"{r['name']} — {r.get('source','')}" for r in startup.scan()]
+        services_rows = [f"[{r['group']}] {r['display_name']} — {r['start_type']}" for r in services.scan()]
+        disk_rows = [f"{r['label']}: {r['size_mb']} МБ{'  ⚠' if r['warn'] else ''}" for r in disk.scan()]
+        privacy_rows = [
+            (f"твик: {r['name']} [{r.get('status','')}]" if r["kind"] == "tweak"
+             else f"приложение: {r['name']}{'' if r.get('safe') else '  ⚠ осторожно'}")
+            for r in privacy.scan()
+        ]
         return [
             ("🏠 Дашборд", Dashboard()),
             ("🚀 Автозагрузка", _ModulePlaceholder("Автозагрузка", startup_rows)),
+            ("⚙️ Службы", _ModulePlaceholder("Службы", services_rows)),
+            ("💾 Очистка диска", _ModulePlaceholder("Очистка диска", disk_rows)),
+            ("🕵️ Приватность", _ModulePlaceholder("Приватность и bloatware", privacy_rows)),
             ("📝 Реестр", _ModulePlaceholder("Реестр", reg_rows)),
         ]
 
