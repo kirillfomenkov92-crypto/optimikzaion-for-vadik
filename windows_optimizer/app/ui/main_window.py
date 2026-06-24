@@ -16,6 +16,7 @@ from app.ui.scan_page import ScanPage
 from app.ui.backups_page import BackupsPage
 from app.ui.about_page import AboutPage
 from app.ui.settings_page import SettingsPage
+from app.ui.history_panel import HistoryPanel
 from app.ui.widgets.tweak_panel import TweakPanel
 from app.ui.widgets.disk_panel import DiskPanel
 from app.ui.widgets.services_panel import ServicesPanel
@@ -114,6 +115,41 @@ class MainWindow(QMainWindow):
 
         self.stack.currentChanged.connect(self._fade_in)
         self._apply_style()
+        self._setup_tray()
+
+    def _setup_tray(self) -> None:
+        try:
+            from PyQt6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
+
+            if not QSystemTrayIcon.isSystemTrayAvailable():
+                return
+            from app.ui.dashboard import _health_score
+
+            self._tray = QSystemTrayIcon(self._tray_icon_for(_health_score()), self)
+            self._tray.setToolTip("Windows Optimizer Pro")
+            menu = QMenu()
+            menu.addAction("Открыть").triggered.connect(self.showNormal)
+            menu.addAction("Выход").triggered.connect(QApplication.quit)
+            self._tray.setContextMenu(menu)
+            self._tray.activated.connect(lambda _r: self.showNormal())
+            self._tray.show()
+        except Exception:
+            pass
+
+    def _tray_icon_for(self, score: int):
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QColor, QIcon, QPainter, QPixmap
+
+        color = "#00D4AA" if score > 70 else ("#FFB547" if score > 40 else "#FF5C8D")
+        pm = QPixmap(32, 32)
+        pm.fill(Qt.GlobalColor.transparent)
+        p = QPainter(pm)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(color))
+        p.drawEllipse(4, 4, 24, 24)
+        p.end()
+        return QIcon(pm)
 
     def _fade_in(self, index: int) -> None:
         """Плавное появление новой панели при переключении раздела."""
@@ -181,6 +217,7 @@ class MainWindow(QMainWindow):
             ("🕵️ Приватность", ActionPanel("Приватность", privacy.scan, apply_privacy,
                                             "Применить твики приватности")),
             ("📝 Реестр", TweakPanel(reg, "Реестр — твики")),
+            ("📋 История", HistoryPanel()),
             ("🗄️ Бэкапы", BackupsPage()),
             ("⚙️ Настройки", SettingsPage(self.set_theme, getattr(self, "_theme", "dark"))),
             ("❓ О программе", AboutPage()),
