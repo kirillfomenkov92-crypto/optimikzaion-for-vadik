@@ -89,7 +89,7 @@
       "name": "Питание Ultimate + без гибернации",
       "risk": "advanced",
       "powershell": [
-        "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 99999999-9999-9999-9999-999999999999",
+        "powercfg /delete 99999999-9999-9999-9999-999999999999 2>$null; powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 99999999-9999-9999-9999-999999999999",
         "powercfg /setactive 99999999-9999-9999-9999-999999999999",
         "powercfg /h off"
       ]

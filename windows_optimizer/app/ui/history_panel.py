@@ -72,7 +72,13 @@ class HistoryPanel(QWidget):
         self.status.setObjectName("Subtitle")
         bar.addWidget(self.status)
         root.addLayout(bar)
-        self.refresh()
+        self._loaded = False
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if not self._loaded:
+            self._loaded = True
+            self.refresh()
 
     def refresh(self) -> None:
         self.list.clear()

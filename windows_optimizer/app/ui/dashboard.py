@@ -143,7 +143,14 @@ class Dashboard(QWidget):
         self._worker.step_done.connect(self._overlay.mark_done)
         self._worker.finished_ok.connect(self._optimize_done)
         self._worker.failed.connect(self._optimize_failed)
+        self._worker.cancelled.connect(self._optimize_cancelled)
+        # Кнопка overlay реально прерывает операцию (между шагами).
+        self._overlay.cancel.clicked.connect(self._worker.requestInterruption)
         self._worker.start()
+
+    def _optimize_cancelled(self) -> None:
+        self._overlay.finish("Отменено. Применённые шаги можно откатить в разделе «Бэкапы».")
+        self.optimize_btn.setEnabled(True)
 
     def _step_backup(self):
         return backup.create_backup("quick", hives=["HKLM", "HKCU"])

@@ -50,7 +50,13 @@ class BackupsPage(QWidget):
         self.status = QLabel("")
         self.status.setObjectName("Subtitle")
         root.addWidget(self.status)
-        self.refresh()
+        self._loaded = False
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if not self._loaded:
+            self._loaded = True
+            self.refresh()
 
     def refresh(self) -> None:
         self.list.clear()

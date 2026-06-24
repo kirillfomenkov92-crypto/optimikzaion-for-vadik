@@ -19,7 +19,13 @@ class DiskPanel(QWidget):
         self.module = DiskModule()
         self._worker = None
         self._build()
-        self.refresh()
+        self._loaded = False
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if not self._loaded:
+            self._loaded = True
+            self.refresh()
 
     def _build(self) -> None:
         root = QVBoxLayout(self)

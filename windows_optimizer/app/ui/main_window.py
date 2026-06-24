@@ -42,8 +42,10 @@ _ICON = Path(__file__).resolve().parents[2] / "resources" / "icons" / "app.ico"
 class _ModulePlaceholder(QWidget):
     """Простая панель модуля на этапе фундамента: показывает результат scan()."""
 
-    def __init__(self, title: str, rows: List[str]) -> None:
+    def __init__(self, title: str, rows_fn) -> None:
         super().__init__()
+        self._rows_fn = rows_fn
+        self._loaded = False
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
         head = QLabel(title)
@@ -51,17 +53,32 @@ class _ModulePlaceholder(QWidget):
         layout.addWidget(head)
         area = QScrollArea()
         area.setWidgetResizable(True)
-        inner = QWidget()
-        inner_l = QVBoxLayout(inner)
+        self._inner = QWidget()
+        self._inner_l = QVBoxLayout(self._inner)
+        self._inner_l.addWidget(QLabel("Загрузка…"))
+        area.setWidget(self._inner)
+        layout.addWidget(area)
+
+    def showEvent(self, event) -> None:  # ленивая загрузка при первом показе
+        super().showEvent(event)
+        if self._loaded:
+            return
+        self._loaded = True
+        for i in reversed(range(self._inner_l.count())):
+            w = self._inner_l.itemAt(i).widget()
+            if w:
+                w.setParent(None)
+        try:
+            rows = self._rows_fn()
+        except Exception as ex:  # pragma: no cover
+            rows = [f"ошибка: {ex}"]
         if not rows:
-            inner_l.addWidget(QLabel("Нет данных (доступно на Windows)."))
+            self._inner_l.addWidget(QLabel("Нет данных (доступно на Windows)."))
         for r in rows:
             lbl = QLabel("• " + r)
             lbl.setWordWrap(True)
-            inner_l.addWidget(lbl)
-        inner_l.addStretch(1)
-        area.setWidget(inner)
-        layout.addWidget(area)
+            self._inner_l.addWidget(lbl)
+        self._inner_l.addStretch(1)
 
 
 class MainWindow(QMainWindow):
@@ -151,6 +168,16 @@ class MainWindow(QMainWindow):
         p.end()
         return QIcon(pm)
 
+    def closeEvent(self, event) -> None:
+        # Корректно завершаем фоновые потоки, чтобы не было
+        # «QThread: Destroyed while thread is still running».
+        try:
+            from app.ui.widgets.worker import stop_all
+            stop_all()
+        except Exception:
+            pass
+        super().closeEvent(event)
+
     def _fade_in(self, index: int) -> None:
         """Плавное появление новой панели при переключении раздела."""
         try:
@@ -181,13 +208,16 @@ class MainWindow(QMainWindow):
         power = PowerModule()
         memory = MemoryModule()
 
-        startup_rows = [f"{r['name']} — {r.get('source','')}" for r in startup.scan()]
         gaming = GamingModule()
         gpu = GpuModule()
         cpu = CpuModule()
         security = SecurityModule()
-        gpu_rows = [f"{r['item']}: {r['value']}" for r in gpu.scan()]
-        security_rows = [f"{r['item']}: {r['value']}" for r in security.scan()]
+
+        # Ленивые поставщики строк для заглушек (scan() выполнится при первом показе,
+        # а не на старте окна — иначе UI замирал бы на WMI/PowerShell/обходе диска).
+        startup_rows = lambda: [f"{r['name']} — {r.get('source','')}" for r in startup.scan()]
+        gpu_rows = lambda: [f"{r['item']}: {r['value']}" for r in gpu.scan()]
+        security_rows = lambda: [f"{r['item']}: {r['value']}" for r in security.scan()]
 
         # Обёртки «применить рекомендованное» для панелей действий.
         apply_memory = lambda: {"LargeSystemCache": memory.set_large_system_cache(0)}
