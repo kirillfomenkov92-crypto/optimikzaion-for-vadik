@@ -27,7 +27,13 @@ class TweakPanel(QWidget):
         self._rows: List[TweakRow] = []
         self._worker = None
         self._build(title)
-        self.refresh()
+        self._loaded = False
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if not self._loaded:
+            self._loaded = True
+            self.refresh()
 
     def _build(self, title: str) -> None:
         root = QVBoxLayout(self)
