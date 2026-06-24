@@ -62,8 +62,14 @@ class Tweak:
             try:
                 old, _ = reg.read_value(ch.hive, ch.path, ch.name)
                 reg.write_value(ch.hive, ch.path, ch.name, ch.value_optimized, ch.type)
+                # Верификация: читаем значение обратно и сверяем с ожидаемым.
+                cur, _ = reg.read_value(ch.hive, ch.path, ch.name)
+                verified = (cur == ch.value_optimized)
                 log_change("registry", f"{self.id}:{ch.hive}\\{ch.path}\\{ch.name}",
-                           old=old, new=ch.value_optimized)
+                           old=old, new=ch.value_optimized,
+                           status="SUCCESS" if verified else "WARN: значение не подтвердилось")
+                if not verified:
+                    ok = False
             except Exception as e:  # pragma: no cover - зависит от ОС
                 log_change("registry", f"{self.id}:{ch.name}", status=f"ERROR:{e}")
                 ok = False

@@ -47,7 +47,7 @@ def read_value(hive: str, path: str, name: str) -> Tuple[Optional[Any], Optional
     """Прочитать значение. Возвращает (value, type) или (None, None), если нет."""
     _require_windows()
     try:
-        with winreg.OpenKey(_hive(hive), path, 0, winreg.KEY_READ) as key:
+        with winreg.OpenKey(_hive(hive), path, 0, winreg.KEY_READ | winreg.KEY_WOW64_64KEY) as key:
             value, regtype = winreg.QueryValueEx(key, name)
             return value, regtype
     except FileNotFoundError:
@@ -60,7 +60,7 @@ def write_value(hive: str, path: str, name: str, value: Any, regtype: str = "REG
     rtype = _TYPES.get(regtype.upper())
     if rtype is None:
         raise ValueError(f"Неизвестный тип реестра: {regtype}")
-    key = winreg.CreateKeyEx(_hive(hive), path, 0, winreg.KEY_SET_VALUE)
+    key = winreg.CreateKeyEx(_hive(hive), path, 0, winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY)
     try:
         winreg.SetValueEx(key, name, 0, rtype, value)
     finally:
@@ -71,7 +71,7 @@ def delete_value(hive: str, path: str, name: str) -> bool:
     """Удалить значение. True — удалено, False — не было."""
     _require_windows()
     try:
-        with winreg.OpenKey(_hive(hive), path, 0, winreg.KEY_SET_VALUE) as key:
+        with winreg.OpenKey(_hive(hive), path, 0, winreg.KEY_SET_VALUE | winreg.KEY_WOW64_64KEY) as key:
             winreg.DeleteValue(key, name)
             return True
     except FileNotFoundError:
