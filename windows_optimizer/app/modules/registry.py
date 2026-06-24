@@ -7,8 +7,9 @@ from typing import Dict, List, Optional
 
 from app.core.logger import get_logger
 from app.core.optimizer import OptimizerModule, Tweak, TweakStatus
+from app.utils.resources import resource_path
 
-_DB_PATH = Path(__file__).resolve().parents[2] / "data" / "tweaks_database.json"
+_DB_PATH = resource_path("data", "tweaks_database.json")
 _log = get_logger()
 
 

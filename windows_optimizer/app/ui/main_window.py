@@ -34,9 +34,11 @@ from app.modules.gpu import GpuModule
 from app.modules.cpu import CpuModule
 from app.modules.security import SecurityModule
 
-_STYLES_DIR = Path(__file__).resolve().parent / "styles"
+from app.utils.resources import resource_path
+
+_STYLES_DIR = resource_path("app", "ui", "styles")
 _STYLE = _STYLES_DIR / "dark_theme.qss"
-_ICON = Path(__file__).resolve().parents[2] / "resources" / "icons" / "app.ico"
+_ICON = resource_path("resources", "icons", "app.ico")
 
 
 class _ModulePlaceholder(QWidget):

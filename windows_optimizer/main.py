@@ -40,7 +40,8 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     app.setApplicationName("Windows Optimizer Pro")
-    icon = Path(__file__).resolve().parent / "resources" / "icons" / "app.ico"
+    from app.utils.resources import resource_path
+    icon = resource_path("resources", "icons", "app.ico")
     if icon.exists():
         app.setWindowIcon(QIcon(str(icon)))
 
@@ -50,7 +51,7 @@ def main() -> int:
         from PyQt6.QtWidgets import QSplashScreen
         from PyQt6.QtGui import QPixmap
 
-        png = Path(__file__).resolve().parent / "resources" / "icons" / "app.png"
+        png = resource_path("resources", "icons", "app.png")
         if png.exists():
             pm = QPixmap(str(png))
             if not pm.isNull():
