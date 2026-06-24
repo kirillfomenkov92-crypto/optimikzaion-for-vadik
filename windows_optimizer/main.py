@@ -44,8 +44,26 @@ def main() -> int:
     if icon.exists():
         app.setWindowIcon(QIcon(str(icon)))
 
+    # Splash-экран на время инициализации.
+    splash = None
+    try:
+        from PyQt6.QtWidgets import QSplashScreen
+        from PyQt6.QtGui import QPixmap
+
+        png = Path(__file__).resolve().parent / "resources" / "icons" / "app.png"
+        if png.exists():
+            pm = QPixmap(str(png))
+            if not pm.isNull():
+                splash = QSplashScreen(pm.scaled(180, 180))
+                splash.show()
+                app.processEvents()
+    except Exception:
+        splash = None
+
     window = MainWindow()
     window.show()
+    if splash is not None:
+        splash.finish(window)
     return app.exec()
 
 
