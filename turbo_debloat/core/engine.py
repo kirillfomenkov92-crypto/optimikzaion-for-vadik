@@ -190,13 +190,15 @@ class PlaybookEngine:
         try:
             hp = backup_mod._hosts_path()
             lines = hp.read_text(encoding="utf-8", errors="ignore").splitlines()
-            existing = set(lines)
+            existing = set(s.strip() for s in lines)
             added = 0
-            with hp.open("a", encoding="utf-8") as f:
+            # hosts на Windows — ASCII/ANSI с CRLF; пишем переводы строк \r\n.
+            with hp.open("a", encoding="ascii", newline="") as f:
                 for h in hosts:
                     entry = f"0.0.0.0 {h.split(':')[0]}"
                     if entry not in existing:
-                        f.write("\n" + entry)
+                        f.write("\r\n" + entry)
+                        existing.add(entry)
                         added += 1
             return StepResult(step.label, True, f"добавлено записей: {added}")
         except Exception as e:
