@@ -13,6 +13,13 @@ import argparse
 import sys
 from pathlib import Path
 
+# Принудительно UTF-8 для вывода (иначе на Windows-консоли cp1252 ломает кириллицу).
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from turbo_debloat.core.engine import PlaybookEngine, iter_steps, load_playbook
