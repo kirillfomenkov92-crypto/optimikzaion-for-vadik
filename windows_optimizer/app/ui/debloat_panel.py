@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 from app.core.logger import get_logger
 from app.debloat import restore as restore_mod
 from app.debloat.engine import PlaybookEngine, Step, iter_steps, load_playbook
+from app.ui.widgets.worker import active_workers
 from app.utils.resources import resource_path
 
 _log = get_logger()
@@ -41,6 +42,9 @@ class _RunWorker(QThread):
         self._dry_run = dry_run
 
     def run(self) -> None:
+        # Регистрируемся, чтобы MainWindow.closeEvent → stop_all() дождался
+        # завершения потока и не уронил «QThread: Destroyed while running».
+        active_workers.add(self)
         try:
             engine = PlaybookEngine(dry_run=self._dry_run)
             report = engine.run(
@@ -50,6 +54,8 @@ class _RunWorker(QThread):
             self.done.emit(report)
         except Exception as e:  # pragma: no cover
             self.failed.emit(str(e))
+        finally:
+            active_workers.discard(self)
 
 
 class _WarningDialog(QDialog):
