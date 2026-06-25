@@ -131,9 +131,9 @@ QLabel#Subtitle {{ color: {c.TEXT_SECONDARY}; font-size: {Typography.SIZE_SM}px;
 #TweakRow:hover {{ background-color: {c.BG_SURFACE}; }}
 
 /* Карточки метрик */
-#MetricCard {{ background-color: {c.BG_SURFACE}; border: 1px solid {c.BORDER_DEFAULT}; border-radius: {Radius.LG}px; padding: 14px; }}
-#MetricValue {{ font-size: {Typography.SIZE_LG}px; font-weight: {Typography.WEIGHT_BOLD}; color: {c.TEXT_PRIMARY}; }}
-#MetricLabel {{ color: {c.TEXT_SECONDARY}; font-size: {Typography.SIZE_SM}px; }}
+#MetricCard {{ background-color: {c.BG_SURFACE}; border: 1px solid {c.BORDER_SUBTLE}; border-radius: {Radius.XL}px; padding: 22px 24px; }}
+#MetricValue {{ font-size: {Typography.SIZE_XL}px; font-weight: {Typography.WEIGHT_SEMIBOLD}; color: {c.TEXT_PRIMARY}; }}
+#MetricLabel {{ color: {c.TEXT_TERTIARY}; font-size: {Typography.SIZE_XS}px; font-weight: {Typography.WEIGHT_SEMIBOLD}; }}
 
 /* Кнопки */
 QPushButton#Primary {{
