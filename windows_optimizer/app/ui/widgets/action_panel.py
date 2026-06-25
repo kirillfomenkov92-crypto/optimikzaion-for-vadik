@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
 )
 
 from app.core import backup
+from app.ui.widgets.row_format import format_scan_row
 from app.ui.widgets.worker import OperationWorker
 
 
@@ -66,12 +67,7 @@ class ActionPanel(QWidget):
         self.list.clear()
         rows = self._scan_fn()
         for r in rows:
-            if "name" in r:
-                self.list.addItem(f"[{r.get('status','')}] {r['name']} — {r.get('description','')}")
-            elif "item" in r:
-                self.list.addItem(f"{r['item']}: {r.get('value','')}")
-            else:
-                self.list.addItem(str(r))
+            self.list.addItem(format_scan_row(r))
         self.status.setText(f"Пунктов: {len(rows)}")
 
     def _apply(self) -> None:
