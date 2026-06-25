@@ -12,6 +12,7 @@ from typing import Dict, List
 
 from app.core.logger import get_logger, log_change
 from app.core.optimizer import OptimizerModule
+from app.core.result import OperationResult
 
 IS_WINDOWS = sys.platform == "win32"
 _log = get_logger()
@@ -103,13 +104,18 @@ class ServicesModule(OptimizerModule):
             _log.error("Перечисление служб не удалось: %s", e)
         return result
 
-    def set_start_type(self, name: str, mode: str) -> bool:
-        """Сменить тип запуска службы. mode: auto|manual|disabled."""
+    def set_start_type(self, name: str, mode: str) -> OperationResult:
+        """Сменить тип запуска службы. mode: auto|manual|disabled.
+
+        Возвращает OperationResult, чтобы отличить пропуск-ради-защиты
+        (``skipped=True``) от реальной ошибки (``error``).
+        """
         if (name or "").lower() in _NEVER_LC:
             log_change("services", f"ЗАЩИТА: пропуск критической службы {name}", status="SKIPPED")
-            return False
+            return OperationResult(success=True, skipped=True,
+                                   message=f"Защищённая служба {name} — пропущено")
         if not IS_WINDOWS:
-            return False
+            return OperationResult(success=False, message="Доступно только на Windows")
         sc_mode = _START_MAP.get(mode)
         if not sc_mode:
             raise ValueError(f"Неизвестный режим: {mode}")
@@ -119,7 +125,9 @@ class ServicesModule(OptimizerModule):
             ok = cp.returncode == 0
             log_change("services", f"{name} start={sc_mode}",
                        status="SUCCESS" if ok else f"ERROR:{cp.stderr.strip()}")
-            return ok
+            return OperationResult(success=ok,
+                                   message=f"{name} -> {sc_mode}" if ok else cp.stderr.strip(),
+                                   undo=[f"sc config {name} start= auto"] if ok else [])
         except Exception as e:  # pragma: no cover
             log_change("services", f"{name} start={sc_mode}", status=f"ERROR:{e}")
-            return False
+            return OperationResult(success=False, message=str(e), error=e)

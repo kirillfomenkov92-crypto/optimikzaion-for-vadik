@@ -111,9 +111,17 @@ class ServicesPanel(QWidget):
         self._worker.failed.connect(self._error)
         self._worker.start()
 
-    def _done(self, result: Dict[str, bool]) -> None:
-        ok = sum(1 for v in result.values() if v)
-        self.status.setText(f"Готово: {ok}/{len(result)} успешно.")
+    def _done(self, result: Dict) -> None:
+        total = len(result)
+        skipped = sum(1 for r in result.values() if getattr(r, "skipped", False))
+        failed = sum(1 for r in result.values() if not getattr(r, "is_ok", lambda: bool(r))())
+        ok = total - skipped - failed
+        msg = f"Готово: применено {ok}/{total}"
+        if skipped:
+            msg += f", пропущено (защита) {skipped}"
+        if failed:
+            msg += f", ошибок {failed}"
+        self.status.setText(msg)
         self.btn_apply.setEnabled(True)
         self.refresh()
 
