@@ -7,6 +7,7 @@ from typing import Dict, List
 
 from app.core.logger import log_change
 from app.core.optimizer import OptimizerModule
+from app.core.tweak_applier import RegistryTweakApplier
 from app.utils import registry_helper as reg
 
 IS_WINDOWS = sys.platform == "win32"
@@ -44,17 +45,10 @@ class GamingModule(OptimizerModule):
         return rows
 
     def apply_all(self) -> Dict[str, bool]:
-        result: Dict[str, bool] = {}
-        for hive, path, name, rtype, opt, _d, _desc in GAME_TWEAKS:
-            try:
-                old, _ = reg.read_value(hive, path, name)
-                reg.write_value(hive, path, name, opt, rtype)
-                log_change("gaming", name, old=old, new=opt)
-                result[name] = True
-            except Exception as e:  # pragma: no cover
-                log_change("gaming", name, status=f"ERROR:{e}")
-                result[name] = False
-        return result
+        # Единый применятель с верификацией read-back (см. app/core/tweak_applier).
+        tweaks = [(hive, path, name, rtype, opt)
+                  for hive, path, name, rtype, opt, _d, _desc in GAME_TWEAKS]
+        return RegistryTweakApplier.apply_many(tweaks, module="gaming")
 
     def set_hpet(self, enabled: bool) -> bool:
         """Управление HPET через bcdedit. ВНИМАНИЕ: эффект индивидуален — тестировать."""
