@@ -44,11 +44,12 @@ for svc in ["DiagTrack", "diagtrack", "XblGameSave"]:
     g = mod.group_of(svc)
     check(g != "never", f"служба не должна быть 'never': {svc!r} -> {g!r}")
 
-# 3) set_start_type блокирует защищённую службу в любом регистре (без прав/Windows
-#    функция всё равно сначала проверяет NEVER и возвращает False до любых действий).
+# 3) set_start_type блокирует защищённую службу в любом регистре: возвращает
+#    OperationResult со skipped=True (ничего не меняет) ещё до любых действий.
 for svc in ["WUAUSERV", "WinDefend", "bits"]:
-    check(mod.set_start_type(svc, "disabled") is False,
-          f"set_start_type должен отказать для защищённой службы {svc!r}")
+    res = mod.set_start_type(svc, "disabled")
+    check(res.skipped is True,
+          f"set_start_type для защищённой службы {svc!r} должен быть skipped, получено {res!r}")
 
 # 4) Набор NEVER реально покрывает Update/Defender/Store (на случай правок данных).
 must_cover = {"wuauserv", "bits", "windefend", "appxsvc", "installservice"}

@@ -54,6 +54,12 @@ jobs:
       - name: Тесты защиты служб
         run: python tests/test_services_protection.py
 
+      - name: Тесты применятеля твиков
+        run: python tests/test_tweak_applier.py
+
+      - name: Тесты OperationResult
+        run: python tests/test_operation_result.py
+
       - name: Сборка .exe (PyInstaller)
         run: python build.py
 

@@ -7,6 +7,7 @@ from typing import Dict, List
 
 from app.core.logger import log_change
 from app.core.optimizer import OptimizerModule
+from app.core.tweak_applier import RegistryTweakApplier
 from app.utils import registry_helper as reg
 
 IS_WINDOWS = sys.platform == "win32"
@@ -50,17 +51,10 @@ class NetworkModule(OptimizerModule):
         return rows
 
     def apply_tcp_tweaks(self) -> Dict[str, bool]:
-        result: Dict[str, bool] = {}
-        for name, path, rtype, opt, _default, _desc in TCP_TWEAKS:
-            try:
-                old, _ = reg.read_value("HKLM", path, name)
-                reg.write_value("HKLM", path, name, opt, rtype)
-                log_change("network", f"{name}", old=old, new=opt)
-                result[name] = True
-            except Exception as e:  # pragma: no cover
-                log_change("network", f"{name}", status=f"ERROR:{e}")
-                result[name] = False
-        return result
+        # Единый применятель с верификацией read-back (см. app/core/tweak_applier).
+        tweaks = [("HKLM", path, name, rtype, opt)
+                  for name, path, rtype, opt, _default, _desc in TCP_TWEAKS]
+        return RegistryTweakApplier.apply_many(tweaks, module="network")
 
     def set_dns(self, interface: str, profile: str) -> bool:
         """Назначить DNS из профиля для сетевого интерфейса (netsh)."""
