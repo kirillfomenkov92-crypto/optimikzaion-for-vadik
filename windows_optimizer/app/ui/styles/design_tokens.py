@@ -137,16 +137,33 @@ QLabel#Subtitle {{ color: {c.TEXT_SECONDARY}; font-size: {Typography.SIZE_SM}px;
 
 /* Кнопки */
 QPushButton#Primary {{
-    background-color: {c.ACCENT_PRIMARY}; color: #FFFFFF; border: none;
-    border-radius: {Radius.MD}px; padding: 10px 20px; font-weight: {Typography.WEIGHT_SEMIBOLD};
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {c.GRADIENT_START}, stop:1 {c.GRADIENT_END});
+    color: #FFFFFF; border: none;
+    border-radius: {Radius.MD}px; padding: 10px 22px; font-weight: {Typography.WEIGHT_SEMIBOLD};
 }}
-QPushButton#Primary:hover {{ background-color: {c.ACCENT_SECONDARY}; }}
+QPushButton#Primary:hover {{
+    background: qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 {c.ACCENT_SECONDARY}, stop:1 {c.GRADIENT_END});
+}}
+QPushButton#Primary:disabled {{ background: {c.BG_OVERLAY}; color: {c.TEXT_TERTIARY}; }}
+QPushButton#Danger {{
+    background: transparent; color: {c.DANGER};
+    border: 1px solid {c.DANGER}; border-radius: {Radius.MD}px; padding: 8px 18px;
+    font-weight: {Typography.WEIGHT_MEDIUM};
+}}
+QPushButton#Danger:hover {{ background: {c.DANGER}; color: #FFFFFF; }}
 QPushButton {{
     background-color: {c.BG_ELEVATED}; color: {c.TEXT_PRIMARY};
     border: 1px solid {c.BORDER_DEFAULT}; border-radius: {Radius.MD}px; padding: 8px 16px;
 }}
 QPushButton:hover {{ background-color: {c.BG_OVERLAY}; border-color: {c.BORDER_ACCENT}; }}
 QPushButton:disabled {{ color: {c.TEXT_TERTIARY}; }}
+
+/* Карточки (профили деблоата и т.п.) */
+#Card {{
+    background-color: {c.BG_SURFACE}; border: 1px solid {c.BORDER_DEFAULT};
+    border-radius: {Radius.LG}px; padding: 18px;
+}}
+#Card:hover {{ border-color: {c.BORDER_ACCENT}; }}
 
 /* Таблицы / списки / деревья */
 QTableWidget, QTreeWidget, QListWidget {{
