@@ -82,7 +82,12 @@ def main(argv=None) -> int:
             return 1
 
     engine = PlaybookEngine(dry_run=dry)
-    report = engine.run(playbook, progress_cb=lambda p, label: print(f"  [{p:3d}%] {label}"))
+    try:
+        report = engine.run(playbook, progress_cb=lambda p, label: print(f"  [{p:3d}%] {label}"))
+    except RuntimeError as e:
+        # Например, не удалось создать бэкап реестра — применение остановлено.
+        print(f"\nОстановлено ради безопасности: {e}")
+        return 1
     print(f"\nИтог ({'СУХОЙ ПРОГОН' if dry else 'ПРИМЕНЕНО'}): "
           f"выполнено {report['done']}, пропущено {report['skipped']}, ошибок {report['failed']} из {report['total']}")
     if report.get("backup"):

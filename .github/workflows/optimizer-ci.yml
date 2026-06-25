@@ -47,6 +47,9 @@ jobs:
         run: |
           python -c "import sys; sys.path.insert(0,'.'); import app.ui.dashboard, app.ui.main_window; print('UI IMPORT OK')"
 
+      - name: Тесты защиты служб
+        run: python tests/test_services_protection.py
+
       - name: Сборка .exe (PyInstaller)
         run: python build.py
 
