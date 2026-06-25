@@ -29,17 +29,29 @@ class MetricCard(QFrame):
     def __init__(self, label: str) -> None:
         super().__init__()
         self.setObjectName("MetricCard")
+        # Мягкая тень для ощущения глубины (Apple-стиль).
+        from PyQt6.QtWidgets import QGraphicsDropShadowEffect
+        from PyQt6.QtGui import QColor as _QColor
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(28)
+        shadow.setXOffset(0)
+        shadow.setYOffset(8)
+        shadow.setColor(_QColor(0, 0, 0, 110))
+        self.setGraphicsEffect(shadow)
+
         layout = QVBoxLayout(self)
-        self.name_lbl = QLabel(label)
+        layout.setSpacing(8)
+        self.name_lbl = QLabel(label.upper())   # капс-подпись для иерархии
         self.name_lbl.setObjectName("MetricLabel")
         self.value_lbl = QLabel("—")
         self.value_lbl.setObjectName("MetricValue")
         self.bar = QProgressBar()
         self.bar.setTextVisible(False)
-        self.bar.setFixedHeight(6)
+        self.bar.setFixedHeight(5)
         self.bar.setRange(0, 100)
         layout.addWidget(self.name_lbl)
         layout.addWidget(self.value_lbl)
+        layout.addSpacing(4)
         layout.addWidget(self.bar)
 
     def set(self, text: str, percent: int) -> None:

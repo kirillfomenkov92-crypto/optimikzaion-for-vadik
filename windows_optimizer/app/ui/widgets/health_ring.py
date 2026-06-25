@@ -1,8 +1,14 @@
-"""Кольцевой индикатор «Состояние системы» (Health Score) с анимацией."""
+"""Кольцевой индикатор «Состояние системы» (Health Score).
+
+Толстая градиентная дуга с мягким свечением, крупное число и подпись «/100».
+Анимируется плавно при изменении значения.
+"""
 from __future__ import annotations
 
-from PyQt6.QtCore import QEasingCurve, QRectF, Qt, QVariantAnimation
-from PyQt6.QtGui import QColor, QFont, QPainter, QPen
+from PyQt6.QtCore import QEasingCurve, QPointF, QRectF, Qt, QVariantAnimation
+from PyQt6.QtGui import (
+    QColor, QConicalGradient, QFont, QPainter, QPen,
+)
 from PyQt6.QtWidgets import QWidget
 
 from app.ui.styles.design_tokens import Colors, Typography
@@ -12,7 +18,7 @@ def _score_colors(value: int):
     if value <= 40:
         return Colors.DANGER, Colors.WARNING
     if value <= 70:
-        return Colors.WARNING, Colors.ACCENT_PRIMARY
+        return Colors.WARNING, Colors.ACCENT_SECONDARY
     return Colors.ACCENT_PRIMARY, Colors.SUCCESS
 
 
@@ -31,9 +37,9 @@ class HealthScoreRing(QWidget):
         super().__init__(parent)
         self._value = 0
         self._target = value
-        self.setMinimumSize(180, 180)
+        self.setMinimumSize(190, 190)
         self._anim = QVariantAnimation(self)
-        self._anim.setDuration(1200)
+        self._anim.setDuration(1100)
         self._anim.setEasingCurve(QEasingCurve.Type.OutCubic)
         self._anim.valueChanged.connect(self._on_anim)
         self.set_value(value)
@@ -53,27 +59,50 @@ class HealthScoreRing(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         side = min(self.width(), self.height())
-        margin = 14
+        thickness = 12
+        margin = 16
         rect = QRectF((self.width() - side) / 2 + margin, (self.height() - side) / 2 + margin,
                       side - 2 * margin, side - 2 * margin)
+        center = rect.center()
+        start, end = _score_colors(self._value)
 
-        # фоновое кольцо
-        bg_pen = QPen(QColor(Colors.BG_ELEVATED), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-        p.setPen(bg_pen)
+        # Фоновое кольцо — тонкое, приглушённое.
+        p.setPen(QPen(QColor(Colors.BG_ELEVATED), thickness,
+                      Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
         p.drawArc(rect, 0, 360 * 16)
 
-        # прогресс
-        start, end = _score_colors(self._value)
-        pen = QPen(QColor(start), 8, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-        p.setPen(pen)
-        span = int(360 * 16 * (self._value / 100.0))
-        p.drawArc(rect, 90 * 16, -span)  # сверху по часовой
+        span = self._value / 100.0
+        if span > 0:
+            # Мягкое свечение под дугой (несколько полупрозрачных проходов).
+            glow = QColor(end)
+            for w, a in ((thickness + 12, 26), (thickness + 6, 40)):
+                gp = QColor(glow); gp.setAlpha(a)
+                p.setPen(QPen(gp, w, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+                p.drawArc(rect, 90 * 16, -int(360 * 16 * span))
 
-        # число
+            # Градиентная дуга прогресса.
+            grad = QConicalGradient(center, 90)
+            grad.setColorAt(0.0, QColor(start))
+            grad.setColorAt(min(0.999, span), QColor(end))
+            grad.setColorAt(1.0, QColor(start))
+            p.setPen(QPen(grad, thickness, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            p.drawArc(rect, 90 * 16, -int(360 * 16 * span))
+
+        # Число — крупное, лёгкое.
         p.setPen(QColor(Colors.TEXT_PRIMARY))
-        f = QFont()
-        f.setPointSize(int(Typography.SIZE_2XL / 1.6))
-        f.setWeight(QFont.Weight.Bold)
-        p.setFont(f)
-        p.drawText(rect, Qt.AlignmentFlag.AlignCenter, str(self._value))
+        fnum = QFont(Typography.FONT_TEXT.split(",")[0].strip('"'))
+        fnum.setPixelSize(int(rect.height() * 0.34))
+        fnum.setWeight(QFont.Weight.DemiBold)
+        p.setFont(fnum)
+        num_rect = QRectF(rect.left(), rect.top() + rect.height() * 0.12, rect.width(), rect.height() * 0.55)
+        p.drawText(num_rect, Qt.AlignmentFlag.AlignCenter, str(self._value))
+
+        # Подпись «/100» — мелко, под числом.
+        p.setPen(QColor(Colors.TEXT_SECONDARY))
+        fsub = QFont(Typography.FONT_TEXT.split(",")[0].strip('"'))
+        fsub.setPixelSize(int(rect.height() * 0.11))
+        fsub.setWeight(QFont.Weight.Medium)
+        p.setFont(fsub)
+        sub_rect = QRectF(rect.left(), rect.top() + rect.height() * 0.58, rect.width(), rect.height() * 0.22)
+        p.drawText(sub_rect, Qt.AlignmentFlag.AlignCenter, "из 100")
         p.end()
