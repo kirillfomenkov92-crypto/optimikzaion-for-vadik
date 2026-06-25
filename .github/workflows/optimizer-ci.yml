@@ -73,6 +73,9 @@ jobs:
       - name: Тесты форматирования строк
         run: python tests/test_row_format.py
 
+      - name: Тесты быстрой оптимизации
+        run: python tests/test_smart_optimize.py
+
       - name: Сборка .exe (PyInstaller)
         run: python build.py
 

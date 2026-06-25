@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
-    QFrame, QGridLayout, QHBoxLayout, QLabel, QProgressBar, QPushButton,
-    QVBoxLayout, QWidget,
+    QFrame, QGridLayout, QHBoxLayout, QLabel, QMessageBox, QProgressBar,
+    QPushButton, QVBoxLayout, QWidget,
 )
 
-from app.core import system_info, backup
+from app.core import system_info, backup, health
+from app.core import smart_optimize as smart
 from app.ui.widgets.health_ring import HealthScoreRing, score_caption
 from app.ui.widgets.progress_overlay import ProgressOverlay
 from app.ui.widgets.toast import Toast
@@ -15,17 +16,11 @@ from app.ui.widgets.worker import StepWorker
 
 
 def _health_score() -> int:
-    """Простая оценка состояния: доля применённых безопасных улучшений,
-    смещённая в дружелюбный диапазон 55..100 (чтобы не пугать пользователя)."""
+    """Оценка состояния: доля применённых безопасных улучшений (см. app/core/health)."""
     try:
         from app.modules.registry import RegistryModule
 
-        rows = RegistryModule().scan()
-        if not rows:
-            return 80
-        applied = sum(1 for r in rows if r.get("status") == "applied")
-        ratio = applied / len(rows)
-        return int(round(55 + ratio * 45))
+        return health.score_from_rows(RegistryModule().scan())
     except Exception:
         return 80
 
@@ -130,6 +125,28 @@ class Dashboard(QWidget):
             self._overlay.resize(self.size())
 
     def _start_optimize(self) -> None:
+        # Предпросмотр (dry-run): сначала показываем, что будет сделано, и
+        # просим подтверждение — ничего не меняем без согласия пользователя.
+        try:
+            from app.modules.registry import RegistryModule
+            count = len(smart.pending_safe_tweak_ids(RegistryModule().scan()))
+        except Exception:
+            count = 0
+        if count:
+            msg = (f"Будет применено безопасных улучшений: {count}\n"
+                   f"и очищены временные файлы.\n\n"
+                   f"Перед изменениями создаётся сохранение для отката. Продолжить?")
+        else:
+            msg = ("Новых безопасных улучшений нет — будут лишь очищены временные файлы.\n\n"
+                   "Перед изменениями создаётся сохранение для отката. Продолжить?")
+        confirm = QMessageBox.question(
+            self, "Ускорить компьютер", msg,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes)
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+
+        self._score_before = _health_score()
         self.optimize_btn.setEnabled(False)
         self._overlay.begin()
         steps = [
@@ -159,9 +176,7 @@ class Dashboard(QWidget):
         from app.modules.registry import RegistryModule
 
         mod = RegistryModule()
-        ids = [r["id"] for r in mod.scan()
-               if r.get("risk_level") == "safe" and r.get("simple_mode_visible", True)
-               and r.get("status") != "applied"]
+        ids = smart.pending_safe_tweak_ids(mod.scan())
         return mod.apply_many(ids) if ids else {}
 
     def _step_clean_temp(self):
@@ -183,9 +198,11 @@ class Dashboard(QWidget):
         self._overlay.finish(f"Применено улучшений: {applied}. Очищено: {mb} МБ.")
         self.optimize_btn.setEnabled(True)
         Toast.show_message(self, f"Готово! Улучшений: {applied}, очищено {mb} МБ.", "success")
-        # обновляем кольцо состояния
-        self.ring.set_value(_health_score())
-        self.caption.setText(score_caption(_health_score()))
+        # Обновляем кольцо состояния и показываем динамику «было → стало».
+        after = _health_score()
+        self.ring.set_value(after)
+        before = getattr(self, "_score_before", after)
+        self.caption.setText(health.delta_text(before, after))
 
     def _optimize_failed(self, msg: str) -> None:
         self._overlay.finish(f"Не удалось завершить: {msg}")
