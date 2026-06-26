@@ -108,7 +108,10 @@ QWidget {{
     outline: none;
 }}
 
+/* Подписи прозрачны, иначе на карточках (светлый фон) появляются тёмные полосы. */
+QLabel {{ background: transparent; }}
 QLabel#Title {{ font-size: {Typography.SIZE_XL}px; font-weight: {Typography.WEIGHT_BOLD}; color: {c.TEXT_PRIMARY}; }}
+QLabel#CardTitle {{ font-size: {Typography.SIZE_MD}px; font-weight: {Typography.WEIGHT_SEMIBOLD}; color: {c.TEXT_PRIMARY}; }}
 QLabel#Subtitle {{ color: {c.TEXT_SECONDARY}; font-size: {Typography.SIZE_SM}px; }}
 
 /* Боковое меню и шапка */

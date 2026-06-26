@@ -116,7 +116,9 @@ class DebloatPanel(QWidget):
 
         ultra = QFrame(); ultra.setObjectName("Card")
         uv = QVBoxLayout(ultra)
-        uv.addWidget(QLabel("⚠️ Ультра режим"))
+        uv.setSpacing(8)
+        _ut = QLabel("⚠️ Ультра режим"); _ut.setObjectName("CardTitle")
+        uv.addWidget(_ut)
         uv.addWidget(self._sub("Агрессивное удаление. Часть функций Windows отключится. Только если понимаете, что делаете."))
         ub = QPushButton("Выбрать Ультра"); ub.clicked.connect(lambda: self._choose("ultra"))
         uv.addWidget(ub)
@@ -129,7 +131,8 @@ class DebloatPanel(QWidget):
     def _profile_card(self, title: str, desc: str, pid: str) -> QFrame:
         card = QFrame(); card.setObjectName("Card")
         v = QVBoxLayout(card)
-        t = QLabel(title); t.setObjectName("Subtitle")
+        v.setSpacing(8)
+        t = QLabel(title); t.setObjectName("CardTitle")
         v.addWidget(t)
         v.addWidget(self._sub(desc))
         b = QPushButton("Выбрать"); b.setObjectName("Primary")

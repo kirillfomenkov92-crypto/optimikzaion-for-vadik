@@ -55,6 +55,11 @@ jobs:
         run: |
           python -c "import sys; sys.path.insert(0,'.'); import app.ui.dashboard, app.ui.main_window; print('UI IMPORT OK')"
 
+      - name: Смоук-рендер UI (создание+отрисовка экранов)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python tests/test_ui_smoke.py
+
       - name: Тесты защиты служб
         run: python tests/test_services_protection.py
 
